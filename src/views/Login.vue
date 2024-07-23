@@ -15,8 +15,12 @@
 import '@material/web/textfield/outlined-text-field';
 import '@material/web/button/filled-button';
 import { reactive } from 'vue';
+import { useChatStore } from '@/store/chat';
+import { useRouter } from 'vue-router';
+const router = useRouter();
+const chatStore = useChatStore();
 const client = reactive({
-  url: 'ws://127.0.0.1:3000/ws',
+  url: 'ws://127.0.0.1:8889/ws',
   loginName: '',
   nickName: '',
 });
@@ -25,24 +29,10 @@ const login = async () => {
   search.set('LoginName', client.loginName);
   search.set('NickName', client.nickName);
   const url = `${client.url}?${search}`;
-  // const res = fetch(url);
-  // return;
   const ws = new WebSocket(url);
-  ws.addEventListener('open', (e) => {
-    console.log('open', e);
-    // ws.send(
-    //   JSON.stringify({ Type: 'text', Content: 'This is 1111', From: 'Mushr00m', To: 'Mushr00m' })
-    // );
-  });
-  ws.addEventListener('message', (e) => {
-    console.log('message', e);
-    try {
-      const msg = JSON.parse(e.data);
-      console.log(msg);
-    } catch {}
-  });
-  ws.addEventListener('close', (e) => {
-    console.log('close', e);
+  chatStore.init(ws);
+  router.push({
+    name: 'chat',
   });
 };
 </script>

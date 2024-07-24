@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { reactive, ref } from 'vue';
 export type Message = {
-  Type: 'rename' | 'text' | 'file';
+  Type: 'login' | 'logoff' | 'rename' | 'text' | 'file';
   Content: string;
   From: string;
   To: string;
@@ -30,7 +30,21 @@ export const useChatStore = defineStore('ws', () => {
     try {
       const msg: Message = JSON.parse(e.data);
       msg.Time = new Date(msg.Time);
-      messages.unshift(msg);
+      switch (msg.Type) {
+        case 'login':
+          break;
+        case 'logoff':
+          break;
+        case 'rename':
+          break;
+        case 'file':
+          messages.unshift(msg);
+        case 'text':
+          messages.unshift(msg);
+          break;
+        default:
+          break;
+      }
     } catch {}
   };
   const onClose = (e: CloseEvent) => {

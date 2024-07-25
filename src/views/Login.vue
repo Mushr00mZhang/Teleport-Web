@@ -20,7 +20,7 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 const chatStore = useChatStore();
 const client = reactive({
-  url: 'ws://127.0.0.1:8889/login',
+  url: 'api/login',
   loginName: '',
   nickName: '',
 });

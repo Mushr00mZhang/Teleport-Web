@@ -1,26 +1,82 @@
 import { defineStore } from 'pinia';
 import { reactive, ref } from 'vue';
-export type Message = {
-  Type: 'login' | 'logoff' | 'rename' | 'text' | 'file';
+export type SendMsg = {
+  Type: 'getUsers' | 'rename' | 'text' | 'file';
   Content: string;
   From: string;
   To: string;
-  Time: Date;
 };
+export type Message =
+  | {
+      Type: 'login' | 'logoff' | 'rename' | 'text' | 'file';
+      Content: string;
+      From: string;
+      To: string;
+      Time: Date;
+    }
+  | {
+      Type: 'users';
+      Content: User[];
+      From: string;
+      To: string;
+      Time: Date;
+    };
 export type User = {
   LoginName: string;
   NickName: string;
   Status: 0 | 1;
 };
 export const useChatStore = defineStore('ws', () => {
+  const user: User = {
+    LoginName: '',
+    NickName: '',
+    Status: 0,
+  };
   const ws = ref<WebSocket>();
   const messages = reactive<Message[]>([]);
   const users = reactive<User[]>([]);
-  const init = (n: WebSocket) => {
-    ws.value = n;
-    ws.value.addEventListener('open', onOpen);
+  const login = (loginName: string, nickName: string) => {
+    const search = new URLSearchParams();
+    search.set('LoginName', loginName);
+    search.set('NickName', nickName);
+    const url = `api/login?${search}`;
+    ws.value = new WebSocket(url);
+    ws.value.addEventListener('open', () => {
+      user.LoginName = loginName;
+      user.NickName = nickName;
+      getUsers();
+    });
     ws.value.addEventListener('message', onMessage);
     ws.value.addEventListener('close', onClose);
+  };
+  const sendMsg = (content: string, to: string) => {
+    if (!ws.value) return false;
+    const msg: SendMsg = {
+      Type: 'text',
+      Content: content,
+      From: user.LoginName,
+      To: to,
+    };
+    ws.value.send(JSON.stringify(msg));
+    messages.push({
+      Type: 'text',
+      Content: msg.Content,
+      From: msg.From,
+      To: msg.To,
+      Time: new Date(),
+    });
+    return true;
+  };
+  const getUsers = () => {
+    if (!ws.value) return false;
+    const msg: SendMsg = {
+      Type: 'getUsers',
+      Content: '',
+      From: user.LoginName,
+      To: 'server',
+    };
+    ws.value.send(JSON.stringify(msg));
+    return true;
   };
   const onOpen = (e: Event) => {
     console.log('open', e);
@@ -32,15 +88,24 @@ export const useChatStore = defineStore('ws', () => {
       msg.Time = new Date(msg.Time);
       switch (msg.Type) {
         case 'login':
+          users.push({
+            LoginName: msg.From,
+            NickName: msg.Content,
+            Status: 1,
+          });
           break;
         case 'logoff':
+          break;
+        case 'users':
+          users.splice(0);
+          users.push(...msg.Content);
           break;
         case 'rename':
           break;
         case 'file':
-          messages.unshift(msg);
+          messages.push(msg);
         case 'text':
-          messages.unshift(msg);
+          messages.push(msg);
           break;
         default:
           break;
@@ -68,5 +133,5 @@ export const useChatStore = defineStore('ws', () => {
     ws.value.addEventListener(type, ncb);
     return true;
   };
-  return { init, messages, users, on, once };
+  return { ws, login, sendMsg, messages, user, getUsers, users, on, once };
 });

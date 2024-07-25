@@ -25,12 +25,7 @@ const client = reactive({
   nickName: '',
 });
 const login = async () => {
-  const search = new URLSearchParams();
-  search.set('LoginName', client.loginName);
-  search.set('NickName', client.nickName);
-  const url = `${client.url}?${search}`;
-  const ws = new WebSocket(url);
-  chatStore.init(ws);
+  chatStore.login(client.loginName, client.nickName);
   router.push({
     name: 'chat',
   });

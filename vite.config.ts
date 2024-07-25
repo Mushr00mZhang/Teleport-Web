@@ -8,9 +8,8 @@ export default defineConfig({
     port: 3010,
     proxy: {
       '/api/login': {
-        target: 'http://10.77.11.10:3011',
+        target: 'http://localhost:8889',
         ws: true,
-        rewrite: () => 'http://10.77.11.10:3011/api/login',
       },
 
       // '/api': {

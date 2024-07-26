@@ -27,7 +27,7 @@ const client = reactive({
 const login = async () => {
   chatStore.login(client.loginName, client.nickName);
   router.push({
-    name: 'chat',
+    name: 'main',
   });
 };
 </script>

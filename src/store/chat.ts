@@ -6,25 +6,43 @@ export type SendMsg = {
   From: string;
   To: string;
 };
-export type Message =
-  | {
-      Type: 'login' | 'logoff' | 'rename' | 'text' | 'file';
-      Content: string;
-      From: string;
-      To: string;
-      Time: Date;
-    }
-  | {
-      Type: 'users';
-      Content: User[];
-      From: string;
-      To: string;
-      Time: Date;
-    };
+type BaseMsg = {
+  From: string;
+  To: string;
+  Time: Date;
+};
+type LogMsg = {
+  Type: 'login' | 'logoff';
+  Content: string;
+} & BaseMsg;
+type RenameMsg = {
+  Type: 'rename';
+  Content: string;
+} & BaseMsg;
+type TextMsg = {
+  Type: 'text';
+  Content: string;
+  Read: boolean;
+} & BaseMsg;
+type FileMsg = {
+  Type: 'file';
+  Content: {
+    Url: string;
+    Name: string;
+    Ext: string;
+  };
+  Read: boolean;
+} & BaseMsg;
+type UsersMsg = {
+  Type: 'users';
+  Content: User[];
+} & BaseMsg;
+export type Message = TextMsg | FileMsg | UsersMsg | LogMsg | RenameMsg;
 export type User = {
   LoginName: string;
   NickName: string;
   Status: 0 | 1;
+  LastMsg?: TextMsg | FileMsg;
 };
 export const useChatStore = defineStore('ws', () => {
   const user: User = {
@@ -33,7 +51,7 @@ export const useChatStore = defineStore('ws', () => {
     Status: 0,
   };
   const ws = ref<WebSocket>();
-  const messages = reactive<Message[]>([]);
+  const messages = reactive<(TextMsg | FileMsg)[]>([]);
   const users = reactive<User[]>([]);
   const login = (loginName: string, nickName: string) => {
     const search = new URLSearchParams();
@@ -64,6 +82,7 @@ export const useChatStore = defineStore('ws', () => {
       From: msg.From,
       To: msg.To,
       Time: new Date(),
+      Read: true,
     });
     return true;
   };
@@ -88,13 +107,48 @@ export const useChatStore = defineStore('ws', () => {
       msg.Time = new Date(msg.Time);
       switch (msg.Type) {
         case 'login':
-          users.push({
-            LoginName: msg.From,
-            NickName: msg.Content,
-            Status: 1,
-          });
+          {
+            let user = users.find((i) => i.LoginName === msg.From);
+            if (!user) {
+              user = {
+                LoginName: msg.From,
+                NickName: msg.Content,
+                Status: 1,
+                LastMsg: [...messages]
+                  .sort((a, b) => b.Time.getTime() - a.Time.getTime())
+                  .find(
+                    (i) =>
+                      (i.Type === 'text' || i.Type === 'file') &&
+                      (i.From === msg.From || i.To === msg.From)
+                  ) as TextMsg | FileMsg,
+              };
+              users.push(user);
+            }
+            user.NickName = msg.Content;
+            user.Status = 1;
+          }
           break;
         case 'logoff':
+          {
+            let user = users.find((i) => i.LoginName === msg.From);
+            if (!user) {
+              user = {
+                LoginName: msg.From,
+                NickName: msg.Content,
+                Status: 0,
+                LastMsg: [...messages]
+                  .sort((a, b) => b.Time.getTime() - a.Time.getTime())
+                  .find(
+                    (i) =>
+                      (i.Type === 'text' || i.Type === 'file') &&
+                      (i.From === msg.From || i.To === msg.From)
+                  ) as TextMsg | FileMsg,
+              };
+              users.push(user);
+            }
+            user.NickName = msg.Content;
+            user.Status = 0;
+          }
           break;
         case 'users':
           users.splice(0);
@@ -103,9 +157,20 @@ export const useChatStore = defineStore('ws', () => {
         case 'rename':
           break;
         case 'file':
-          messages.push(msg);
+        // messages.push(msg);
+        // break;
         case 'text':
+          // // 发送给自己的消息，标记为未读
+          // if (msg.To === user.LoginName) {
+          //   msg.Read = false;
+          // }
           messages.push(msg);
+          // 设置用户最新消息
+          for (const user of users) {
+            if (msg.From === user.LoginName) {
+              user.LastMsg = msg;
+            }
+          }
           break;
         default:
           break;

@@ -8,8 +8,13 @@ export default defineConfig({
     port: 3010,
     proxy: {
       '/api/login': {
-        target: 'http://localhost:8889',
+        target: 'http://10.77.11.10/teleport/',
+        // target: 'http://localhost:8889',
         ws: true,
+        // rewrite: (path) => {
+        //   console.log(path);
+        //   return `${path}`;
+        // },
       },
 
       // '/api': {

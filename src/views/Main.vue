@@ -126,7 +126,11 @@ const selectFile = async () => {
   input.remove();
 };
 const formatTime = (time: Date) => {
-  return `${time.getFullYear()}-${time.getMonth() + 1}-${time.getDate()}`;
+  return `${time.getFullYear()}-${time.getMonth() + 1}-${time.getDate()} ${String(
+    time.getHours()
+  ).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}:${String(
+    time.getSeconds()
+  ).padStart(2, '0')}`;
 };
 // const onMessage = (e: MessageEvent) => {
 //   e.data;

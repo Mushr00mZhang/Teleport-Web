@@ -10,11 +10,16 @@
   },
   "dependencies": {
     "@material/web": "^1.5.1",
+    "@wangeditor/editor": "^5.1.23",
+    "crypto-js": "^4.2.0",
     "pinia": "^2.1.7",
+    "uuid": "^10.0.0",
     "vue": "^3.4.33",
     "vue-router": "^4.4.0"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
+    "@types/uuid": "^10.0.0",
     "@vitejs/plugin-vue": "^5.0.5",
     "@vue/tsconfig": "^0.5.1",
     "npm-run-all2": "^6.2.2",

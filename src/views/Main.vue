@@ -26,7 +26,7 @@
               >
                 {{
                   (user.LastMsg?.Type === 'text' && user.LastMsg?.Content) ||
-                  (user.LastMsg?.Type === 'file' && user.LastMsg?.Content.Url) ||
+                  (user.LastMsg?.Type === 'file' && user.LastMsg?.Content.Name) ||
                   ''
                 }}
               </div>
@@ -67,6 +67,12 @@
             <path d="M6 40V8l38 16Zm3-4.65L36.2 24 9 12.5v8.4L21.1 24 9 27Zm0 0V12.5 27Z" />
           </svg>
         </md-filled-tonal-button>
+        <md-filled-tonal-button @click="selectFile">
+          文件
+          <svg slot="icon" viewBox="0 0 48 48">
+            <path d="M6 40V8l38 16Zm3-4.65L36.2 24 9 12.5v8.4L21.1 24 9 27Zm0 0V12.5 27Z" />
+          </svg>
+        </md-filled-tonal-button>
       </section>
     </section>
   </section>
@@ -77,6 +83,7 @@ import { useChatStore, type User } from '@/store/chat';
 import '@material/web/textfield/outlined-text-field';
 import '@material/web/button/filled-tonal-button';
 import { computed, ref } from 'vue';
+import { MyFile } from '@/models/file';
 const router = useRouter();
 const chatStore = useChatStore();
 const messages = computed(() => {
@@ -99,6 +106,24 @@ const selectUser = (user: User) => {
 const send = () => {
   if (!msg.value || !to.value) return;
   chatStore.sendMsg(msg.value, to.value);
+};
+const selectFile = async () => {
+  if (!to.value) return;
+  const _to = to.value;
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.click();
+  await new Promise((r) => input.addEventListener('change', r));
+  if (input.files && input.files.length) {
+    console.log(input.files);
+    for (const file of input.files) {
+      const myFile = new MyFile(file);
+      await myFile.split();
+      console.log(myFile);
+      chatStore.sendFile(myFile, _to);
+    }
+  }
+  input.remove();
 };
 const formatTime = (time: Date) => {
   return `${time.getFullYear()}-${time.getMonth() + 1}-${time.getDate()}`;

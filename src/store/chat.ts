@@ -164,26 +164,49 @@ export const useChatStore = defineStore('ws', () => {
     try {
       if (e.data instanceof Blob) {
         const arrayBuffer = await e.data.arrayBuffer();
-        if (String.fromCharCode(...new Int8Array(arrayBuffer.slice(0, 10))) === 'file-chunk') {
-          const id = String.fromCharCode(...new Int8Array(arrayBuffer.slice(10, 46)));
-          const index = Number(String.fromCharCode(...new Int8Array(arrayBuffer.slice(46, 54))));
-          const count = Number(String.fromCharCode(...new Int8Array(arrayBuffer.slice(54, 62))));
-          const md5 = String.fromCharCode(...new Int8Array(arrayBuffer.slice(62, 94)));
-          const to = String.fromCharCode(...new Int8Array(arrayBuffer.slice(94, 128)));
-          const buf = arrayBuffer.slice(128);
-          console.log(
-            `文件分片接收成功 id: ${id} [${String(index + 1).padStart(
-              String(count).length,
-              '0'
-            )}/${count}] md5: ${md5} len: ${buf.byteLength}`
-          );
-          let bufs = files.get(id);
-          if (!bufs) {
-            bufs = [];
-            files.set(id, bufs);
-          }
-          bufs[index] = buf;
+        if (String.fromCharCode(...new Int8Array(arrayBuffer.slice(0, 10))) !== 'file-chunk')
+          return;
+        const id = String.fromCharCode(...new Int8Array(arrayBuffer.slice(10, 46)));
+        const index = Number(String.fromCharCode(...new Int8Array(arrayBuffer.slice(46, 54))));
+        const count = Number(String.fromCharCode(...new Int8Array(arrayBuffer.slice(54, 62))));
+        const md5 = String.fromCharCode(...new Int8Array(arrayBuffer.slice(62, 94)));
+        const to = String.fromCharCode(...new Int8Array(arrayBuffer.slice(94, 128)));
+        const buf = arrayBuffer.slice(128);
+        console.log(
+          `文件分片接收成功 id: ${id} [${String(index + 1).padStart(
+            String(count).length,
+            '0'
+          )}/${count}] md5: ${md5} len: ${buf.byteLength}`
+        );
+        let bufs = files.get(id);
+        if (!bufs) {
+          bufs = [];
+          files.set(id, bufs);
         }
+        bufs[index] = buf;
+        if (bufs.filter((i) => !!i).length !== count) return;
+        const fileMsg = messages.find((i) => i.Type === 'file' && i.Content.Id === id) as
+          | FileMsg
+          | undefined;
+        if (!fileMsg) return;
+        // const bytes = bufs.reduce(
+        //   (cur, i) => (cur = [...cur, ...new Int8Array(i)]),
+        //   [] as number[]
+        // );
+        // const fileBuf = new Int8Array(bytes);
+        // const blob = new Blob(bufs, { type: fileMsg.Content.Type })
+        const file = new File(bufs, fileMsg.Content.Name, {
+          type: fileMsg.Content.Type,
+        });
+        console.log(file);
+        const url = URL.createObjectURL(file);
+        // console.log(url);
+        // window.open(url, '_blank');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name;
+        a.type = file.type;
+        a.click();
       } else if (typeof e.data === 'string') {
         const msg: Message = JSON.parse(e.data);
         msg.Time = new Date(msg.Time);

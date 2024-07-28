@@ -2,7 +2,7 @@
   <section class="teleport-chat">
     <section class="teleport-chat-aside">
       <section class="teleport-chat-users">
-        <template v-for="user in chatStore.users">
+        <template v-for="user in users">
           <div
             :class="[
               'teleport-chat-user',
@@ -17,7 +17,9 @@
               ]"
             ></div>
             <div class="teleport-chat-user-info">
-              <div class="teleport-chat-user-nick-name">{{ user.NickName }}</div>
+              <div class="teleport-chat-user-nick-name">
+                {{ user.LoginName === chatStore.user.LoginName ? '自己' : user.NickName }}
+              </div>
               <div
                 :class="[
                   'teleport-chat-user-last-msg',
@@ -86,6 +88,20 @@ import { computed, ref } from 'vue';
 import { MyFile } from '@/models/file';
 const router = useRouter();
 const chatStore = useChatStore();
+const users = computed(() => {
+  return chatStore.users.sort((a, b) => {
+    // 自己排第一
+    if (a.LoginName === chatStore.user.LoginName) return -1;
+    else if (b.LoginName === chatStore.user.LoginName) return 1;
+    // 状态排序
+    else if ((a.Status || 0) !== (b.Status || 0)) return (b.Status || 0) - (a.Status || 0);
+    // 时间排序
+    else if ((a.LastMsg?.Time.getTime() || 0) !== (b.LastMsg?.Time.getTime() || 0))
+      return (b.LastMsg?.Time.getTime() || 0) - (a.LastMsg?.Time.getTime() || 0);
+    // 名称排序
+    else return a.NickName.localeCompare(b.NickName);
+  });
+});
 const messages = computed(() => {
   return chatStore.messages
     .sort((a, b) => a.Time.getTime() - b.Time.getTime())
@@ -106,6 +122,7 @@ const selectUser = (user: User) => {
 const send = () => {
   if (!msg.value || !to.value) return;
   chatStore.sendMsg(msg.value, to.value);
+  msg.value = '';
 };
 const selectFile = async () => {
   if (!to.value) return;

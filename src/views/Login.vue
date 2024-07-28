@@ -28,21 +28,26 @@ const client = reactive({
   url: 'api/login',
   loginName: '',
   nickName: '',
+  inputting: true,
 });
+
 const loginNameCheck = computed(() => {
+  if (!client.inputting && !client.loginName)
+    return {
+      error: true,
+      text: '输入不得为空',
+    };
   if (client.loginName) {
-    if (!/^[A-Za-z0-9]+$/.test(client.loginName)) {
+    if (!/^[A-Za-z0-9]+$/.test(client.loginName))
       return {
         error: true,
         text: '请输入英文或数字',
       };
-    }
-    if (client.loginName.length > 20) {
+    if (client.loginName.length > 20)
       return {
         error: true,
         text: '最大长度不得超过20',
       };
-    }
   }
   return {
     error: false,
@@ -50,10 +55,13 @@ const loginNameCheck = computed(() => {
   };
 });
 const login = async () => {
-  chatStore.login(client.loginName, client.nickName);
-  router.push({
-    name: 'main',
-  });
+  client.inputting = false;
+  if (!loginNameCheck.value.error) {
+    chatStore.login(client.loginName, client.nickName);
+    router.push({
+      name: 'main',
+    });
+  }
 };
 </script>
 <style lang="scss">

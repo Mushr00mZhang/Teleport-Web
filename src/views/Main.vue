@@ -58,23 +58,23 @@
         </template>
       </section>
       <section class="teleport-chat-input">
+        <div class="teleport-chat-input-tools">
+          <md-icon-button
+            class="teleport-chat-input-tool teleport-chat-input-tool-send-file"
+            @click="selectFile"
+          >
+            <md-icon>upload_file</md-icon>
+          </md-icon-button>
+        </div>
         <md-outlined-text-field
+          class="teleport-chat-input-message"
           type="textarea"
           label="请输入"
           v-model="msg"
         ></md-outlined-text-field>
-        <md-filled-tonal-button @click="send">
-          发送
-          <svg slot="icon" viewBox="0 0 48 48">
-            <path d="M6 40V8l38 16Zm3-4.65L36.2 24 9 12.5v8.4L21.1 24 9 27Zm0 0V12.5 27Z" />
-          </svg>
-        </md-filled-tonal-button>
-        <md-filled-tonal-button @click="selectFile">
-          文件
-          <svg slot="icon" viewBox="0 0 48 48">
-            <path d="M6 40V8l38 16Zm3-4.65L36.2 24 9 12.5v8.4L21.1 24 9 27Zm0 0V12.5 27Z" />
-          </svg>
-        </md-filled-tonal-button>
+        <md-filled-icon-button class="teleport-chat-input-send-message" @click="send">
+          <md-icon>send</md-icon>
+        </md-filled-icon-button>
       </section>
     </section>
   </section>
@@ -84,6 +84,9 @@ import { useRouter } from 'vue-router';
 import { useChatStore, type User } from '@/store/chat';
 import '@material/web/textfield/outlined-text-field';
 import '@material/web/button/filled-tonal-button';
+import '@material/web/icon/icon';
+import '@material/web/iconbutton/icon-button';
+import '@material/web/iconbutton/filled-icon-button';
 import { computed, ref } from 'vue';
 import { MyFile } from '@/models/file';
 const router = useRouter();
@@ -161,6 +164,7 @@ chatStore.once('close', onClose);
 </script>
 <style lang="scss">
 $prefix-class: 'teleport-chat';
+$block-spacing: 8px;
 .#{$prefix-class} {
   --chat-aside-width: 200px;
   width: 100%;
@@ -171,6 +175,8 @@ $prefix-class: 'teleport-chat';
   &-aside {
     display: flex;
     flex-direction: column;
+    background: #fafafa;
+    padding: $block-spacing;
   }
   &-users {
     flex: auto;
@@ -181,8 +187,8 @@ $prefix-class: 'teleport-chat';
   &-user {
     display: grid;
     grid-template-columns: 32px auto;
-    grid-column-gap: 8px;
-    padding: 8px;
+    grid-column-gap: $block-spacing;
+    padding: $block-spacing;
     border-radius: 4px;
     &:hover {
       background-color: #eee;
@@ -190,11 +196,14 @@ $prefix-class: 'teleport-chat';
     &-selected {
       background-color: #ddd;
     }
+    &:not(:first-child) {
+      margin-top: $block-spacing;
+    }
     &-avatar {
       width: 32px;
       height: 32px;
       border-radius: 4px;
-      background-image: url('src/assets/logo.svg');
+      background-image: url('@/assets/logo.svg');
       background-size: contain;
       background-repeat: no-repeat;
       &-offline {
@@ -229,22 +238,56 @@ $prefix-class: 'teleport-chat';
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    background: #f0f0f0;
   }
   &-messages {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 8px;
+    padding: $block-spacing;
   }
   &-message {
+    display: flex;
+    flex-direction: column;
+    line-break: anywhere;
+    white-space: pre-wrap;
+    align-items: flex-start;
+    &:not(:first-child) {
+      margin-top: $block-spacing;
+    }
     &-self {
-      text-align: right;
+      align-items: flex-end;
     }
     &-time {
       color: #aaa;
       font-size: 14px;
+      margin-bottom: 4px;
+      line-height: 24px;
     }
     &-content {
+      padding: $block-spacing $block-spacing + 4px;
+      border-radius: $block-spacing;
+      background: #fff;
+    }
+  }
+  &-input {
+    padding: $block-spacing;
+    position: relative;
+    &-tools {
+      display: flex;
+    }
+    &-tool {
+    }
+    &-message {
+      width: 100%;
+      height: 120px;
+      resize: none;
+      margin-top: $block-spacing;
+    }
+    &-send-message {
+      position: absolute;
+      right: 20px;
+      bottom: 20px;
     }
   }
 }

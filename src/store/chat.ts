@@ -87,6 +87,8 @@ export const useChatStore = defineStore('ws', () => {
     const url = `${document.head.baseURI.replace(/http(s*)/, 'ws').trimEnd()}api/login?${search}`;
     ws.value = new WebSocket(url);
     ws.value.addEventListener('open', () => {
+      localStorage.setItem('loginName', loginName);
+      localStorage.setItem('nickName', nickName);
       user.LoginName = loginName;
       user.NickName = nickName;
       getUsers();

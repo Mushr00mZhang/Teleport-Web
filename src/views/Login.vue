@@ -26,8 +26,8 @@ const router = useRouter();
 const chatStore = useChatStore();
 const client = reactive({
   url: 'api/login',
-  loginName: '',
-  nickName: '',
+  loginName: localStorage.getItem('loginName') || '',
+  nickName: localStorage.getItem('nickName') || '',
   inputting: true,
 });
 

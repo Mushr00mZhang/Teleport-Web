@@ -241,10 +241,11 @@ $block-spacing: 8px;
     background: #f0f0f0;
   }
   &-messages {
-    flex: 1;
+    flex: auto;
     display: flex;
     flex-direction: column;
     padding: $block-spacing;
+    overflow: hidden auto;
   }
   &-message {
     display: flex;
@@ -271,6 +272,7 @@ $block-spacing: 8px;
     }
   }
   &-input {
+    flex: none;
     padding: $block-spacing;
     position: relative;
     &-tools {

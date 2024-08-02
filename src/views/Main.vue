@@ -1,7 +1,7 @@
 <template>
   <section class="teleport-chat">
     <section class="teleport-chat-aside">
-      <section class="teleport-chat-users">
+      <section class="teleport-chat-users scrolbar">
         <template v-for="user in users">
           <div
             :class="[
@@ -38,7 +38,7 @@
       </section>
     </section>
     <section class="teleport-chat-main">
-      <section class="teleport-chat-messages">
+      <section class="teleport-chat-messages scrolbar">
         <template v-for="msg in messages">
           <div
             :class="[
@@ -165,6 +165,21 @@ chatStore.once('close', onClose);
 <style lang="scss">
 $prefix-class: 'teleport-chat';
 $block-spacing: 8px;
+.scrolbar {
+  scroll-behavior: smooth;
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background: #8b8b8b;
+    &:hover {
+      background: #606060;
+    }
+  }
+}
 .#{$prefix-class} {
   --chat-aside-width: 200px;
   width: 100%;

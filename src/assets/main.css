@@ -8,6 +8,7 @@
   font-weight: normal;
   overflow: hidden;
   --md-icon-font: 'Material Symbols Rounded';
+  /* scrollbar-color: #8b8b8b transparent; */
 }
 
 a,

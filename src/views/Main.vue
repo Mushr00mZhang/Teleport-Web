@@ -46,14 +46,35 @@
               { 'teleport-chat-message-self': msg.From === chatStore.user.LoginName },
             ]"
           >
-            <!-- <div>{{ msg.From }}</div> -->
             <div class="teleport-chat-message-time">{{ formatTime(msg.Time) }}</div>
-            <div class="teleport-chat-message-content" v-if="msg.Type === 'text'">
-              {{ msg.Content }}
-            </div>
-            <div class="teleport-chat-message-file" v-if="msg.Type === 'file'">
-              {{ msg.Content.Name }}
-            </div>
+            <template v-if="msg.Type === 'text'">
+              <div class="teleport-chat-message-content">
+                {{ msg.Content }}
+              </div>
+            </template>
+            <template v-if="msg.Type === 'file'">
+              <div class="teleport-chat-message-file">
+                <div class="teleport-chat-message-prefix">
+                  <md-circular-progress
+                    :class="[
+                      'teleport-chat-message-progress',
+                      { 'teleport-chat-message-progress-hidden': msg.Progress >= 1 },
+                    ]"
+                    :id="`${msg.Content.Id}-progress`"
+                    :value="msg.Progress"
+                  />
+                  <md-icon
+                    :class="[
+                      'teleport-chat-message-progress-completed',
+                      { 'teleport-chat-message-progress-completed-hidden': msg.Progress < 1 },
+                    ]"
+                  >
+                    check_circle
+                  </md-icon>
+                </div>
+                <span class="teleport-chat-message-content">{{ msg.Content.Name }}</span>
+              </div>
+            </template>
           </div>
         </template>
       </section>
@@ -87,8 +108,11 @@ import '@material/web/button/filled-tonal-button';
 import '@material/web/icon/icon';
 import '@material/web/iconbutton/icon-button';
 import '@material/web/iconbutton/filled-icon-button';
+import '@material/web/progress/circular-progress';
 import { computed, ref } from 'vue';
 import { MyFile } from '@/models/file';
+import type { ChunkedBuffer } from '@/workers/filesplit';
+import type { MdCircularProgress } from '@material/web/progress/circular-progress';
 const router = useRouter();
 const chatStore = useChatStore();
 const users = computed(() => {
@@ -135,12 +159,18 @@ const selectFile = async () => {
   input.click();
   await new Promise((r) => input.addEventListener('change', r));
   if (input.files && input.files.length) {
-    console.log(input.files);
+    // console.log(input.files);
     for (const file of input.files) {
       const myFile = new MyFile(file);
-      await myFile.split();
-      console.log(myFile);
       chatStore.sendFile(myFile, _to);
+      const fileMsg = messages.value.find((i) => i.Type === 'file' && i.Content.Id === myFile.id);
+      if (!fileMsg || fileMsg.Type !== 'file') continue;
+      let cnt = 0;
+      await myFile.split((chunk: ChunkedBuffer) => {
+        cnt++;
+        chatStore.sendFileChunk(chunk, _to);
+        fileMsg.Progress = cnt / myFile.count;
+      });
     }
   }
   input.remove();
@@ -284,6 +314,39 @@ $block-spacing: 8px;
       padding: $block-spacing $block-spacing + 4px;
       border-radius: $block-spacing;
       background: #fff;
+    }
+    &-file {
+      display: flex;
+    }
+    &-prefix {
+      position: relative;
+    }
+    &-progress {
+      --md-circular-progress-size: 28px;
+      margin-top: 6px;
+      margin-right: 2px;
+      opacity: 1;
+      transition: opacity 0.5s linear;
+      position: absolute;
+      top: 0;
+      right: 0;
+      &-hidden {
+        opacity: 0;
+      }
+      &-completed {
+        --md-icon-size: 24px;
+        margin-top: 8px;
+        margin-right: 4px;
+        color: green;
+        opacity: 1;
+        transition: opacity 0.5s linear;
+        position: absolute;
+        top: 0;
+        right: 0;
+        &-hidden {
+          opacity: 0;
+        }
+      }
     }
   }
   &-input {

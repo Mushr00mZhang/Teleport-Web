@@ -1,32 +1,87 @@
 import { v4 as uuidv4 } from 'uuid';
 import { type ChunkedBuffer } from '@/workers/filesplit';
 import FileSplitWorker from '@/workers/filesplit.ts?worker';
+import FileMD5Worker from '@/workers/filemd5.ts?worker';
+import { getDB } from './db';
 export class MyFile {
   id: string;
   file: File;
   splitSize: number;
   count: number;
-  chunks: ChunkedBuffer[];
+  private md5: string;
+  private calcingMD5: Promise<void>;
   constructor(file: File, splitSize = 1024 * 1024) {
     this.id = uuidv4();
     this.file = file;
     this.splitSize = splitSize;
     this.count = Math.ceil(file.size / splitSize);
-    this.chunks = [];
+    this.md5 = '';
+    this.calcingMD5 = this.calcMD5();
+    // this.insertFile();
   }
-  async split(size = this.splitSize) {
-    const worker = new FileSplitWorker();
-    worker.postMessage({ source: 'file-split-worker', id: this.id, file: this.file, size });
-    await new Promise((r) => {
+  async getMD5() {
+    await this.calcingMD5;
+    return this.md5;
+  }
+  async calcMD5() {
+    const worker = new FileMD5Worker();
+    worker.postMessage({ source: 'file-md5-worker', id: this.id, file: this.file });
+    await new Promise((r: (value: boolean) => void) => {
       worker.addEventListener('message', (e) => {
-        const chunk = e.data as ChunkedBuffer;
-        if (chunk.id !== this.id) return;
-        this.chunks.push(chunk);
-        if (this.count === this.chunks.length) {
-          r(true);
-        }
+        const { id, md5 } = e.data as { id: string; md5: string };
+        if (this.id !== id) r(false);
+        this.md5 = md5;
+        r(true);
       });
     });
     worker.terminate();
+  }
+  async insertFile() {
+    const db = await getDB();
+    if (db) {
+      const transaction = db.transaction(['files'], 'readwrite');
+      const fileStore = transaction.objectStore('files');
+      const request = fileStore.add({
+        id: this.id,
+        type: this.file.type,
+        size: this.file.size,
+        md5: this.md5,
+      });
+      await new Promise((r) => {
+        request.addEventListener('success', r);
+      });
+    } else {
+      // 启用实时模式
+    }
+  }
+  async split(callback: (chunk: ChunkedBuffer) => void, size = this.splitSize) {
+    const worker = new FileSplitWorker();
+    worker.postMessage({ source: 'file-split-worker', id: this.id, file: this.file, size });
+    await new Promise((r: (value: boolean) => void) => {
+      let chunkCnt = 0;
+      worker.addEventListener('message', (e) => {
+        const chunk = e.data as ChunkedBuffer;
+        if (chunk.fileId !== this.id) return;
+        chunkCnt++;
+        callback(chunk);
+        // this.insertFileChunk(chunk);
+        if (this.count !== chunkCnt) return;
+        r(true);
+      });
+    });
+    worker.terminate();
+  }
+  async insertFileChunk(chunk: ChunkedBuffer) {
+    const db = await getDB();
+    if (db) {
+      const transaction = db.transaction(['fileChunks'], 'readwrite');
+      const fileChunkStore = transaction.objectStore('fileChunks');
+      const request = fileChunkStore.add(chunk);
+      await new Promise((r) => {
+        request.addEventListener('success', r);
+      });
+    } else {
+      // 启用实时模式
+    }
   }
 }

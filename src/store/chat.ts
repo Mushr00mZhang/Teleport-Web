@@ -54,6 +54,7 @@ type FileMsg = {
     Ext: string;
   };
   Read: boolean;
+  Progress: number;
 } & BaseMsg;
 type FileChunkMsg = {
   Type: 'file-chunk';
@@ -116,7 +117,7 @@ export const useChatStore = defineStore('ws', () => {
     return true;
   };
   const sendFile = (file: MyFile, to: string) => {
-    if (!ws.value) return false;
+    if (!ws.value) return null;
     const msg: SendFile = {
       Type: 'file',
       Content: {
@@ -130,19 +131,22 @@ export const useChatStore = defineStore('ws', () => {
       To: to,
     };
     ws.value.send(JSON.stringify(msg));
-    messages.push({ ...msg, Time: new Date(), Read: true });
-    for (const chunk of file.chunks) {
-      const prefix = `file-chunk${chunk.id}${chunk.index.toString().padStart(8)}${chunk.count
-        .toString()
-        .padStart(8)}${chunk.md5}${to.padStart(34)}`;
-      const msgBuf = new Int8Array([
-        ...prefix.split('').map((i) => i.charCodeAt(0)),
-        ...new Int8Array(chunk.buf),
-      ]);
-      ws.value.send(msgBuf);
-      // NOTE:后续添加续传
-    }
-    return true;
+    const fileMsg: FileMsg = { ...msg, Time: new Date(), Read: true, Progress: 0 };
+    messages.push(fileMsg);
+    //   // NOTE:后续添加续传
+    return file.id;
+  };
+  const sendFileChunk = (chunk: ChunkedBuffer, to: string) => {
+    if (!ws.value) return false;
+    const prefix = `file-chunk${chunk.id}${chunk.index.toString().padStart(8)}${chunk.count
+      .toString()
+      .padStart(8)}${chunk.md5}${to.padStart(34)}`;
+    const msgBuf = new Int8Array([
+      ...prefix.split('').map((i) => i.charCodeAt(0)),
+      ...new Int8Array(chunk.buf),
+    ]);
+    ws.value.send(msgBuf);
+    // NOTE:后续添加续传
   };
   const getUsers = () => {
     if (!ws.value) return false;
@@ -157,9 +161,6 @@ export const useChatStore = defineStore('ws', () => {
   };
   const onOpen = (e: Event) => {
     console.log('open', e);
-  };
-  const int8ArrayToString = (data: Int8Array) => {
-    // data.
   };
   const onMessage = async (e: MessageEvent) => {
     console.log('message', e);
@@ -191,19 +192,11 @@ export const useChatStore = defineStore('ws', () => {
           | FileMsg
           | undefined;
         if (!fileMsg) return;
-        // const bytes = bufs.reduce(
-        //   (cur, i) => (cur = [...cur, ...new Int8Array(i)]),
-        //   [] as number[]
-        // );
-        // const fileBuf = new Int8Array(bytes);
-        // const blob = new Blob(bufs, { type: fileMsg.Content.Type })
         const file = new File(bufs, fileMsg.Content.Name, {
           type: fileMsg.Content.Type,
         });
         console.log(file);
         const url = URL.createObjectURL(file);
-        // console.log(url);
-        // window.open(url, '_blank');
         const a = document.createElement('a');
         a.href = url;
         a.download = file.name;
@@ -321,5 +314,5 @@ export const useChatStore = defineStore('ws', () => {
     ws.value.addEventListener(type, ncb);
     return true;
   };
-  return { ws, login, sendMsg, sendFile, messages, user, getUsers, users, on, once };
+  return { ws, login, sendMsg, sendFile, sendFileChunk, messages, user, getUsers, users, on, once };
 });

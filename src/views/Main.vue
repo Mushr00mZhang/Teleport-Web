@@ -79,7 +79,7 @@
                 >
                   <img
                     v-if="msg.Content.Type?.includes('image')"
-                    class="teleport-chat-message-content teleport-chat-message-content-file-image"
+                    class="teleport-chat-message-content-file-image"
                     :src="msg.Content.Url"
                     :title="msg.Content.Name"
                   />
@@ -330,8 +330,10 @@ $block-spacing: 8px;
       border-radius: $block-spacing;
       background: #fff;
       &-file {
+        display: block;
         &-image {
-          width: max(100px, 10vw);
+          height: max(240px, 40vh);
+          display: block;
         }
       }
     }

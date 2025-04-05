@@ -3,6 +3,8 @@ import { type ChunkedBuffer } from '@/workers/filesplit';
 import FileSplitWorker from '@/workers/filesplit.ts?worker';
 import FileMD5Worker from '@/workers/filemd5.ts?worker';
 import { getDB } from './db';
+export const MinSplitSize = 1024 * 1024 * 1;
+export const MaxSplitSize = 1024 * 1024 * 10;
 export class MyFile {
   id: string;
   file: File;
@@ -10,10 +12,10 @@ export class MyFile {
   count: number;
   private md5: string;
   private calcingMD5: Promise<void>;
-  constructor(file: File, splitSize = 1024 * 1024) {
+  constructor(file: File, splitSize = MaxSplitSize / 2) {
     this.id = uuidv4();
     this.file = file;
-    this.splitSize = splitSize;
+    this.splitSize = Math.max(Math.min(splitSize ?? 0, MaxSplitSize), MinSplitSize);
     this.count = Math.ceil(file.size / splitSize);
     this.md5 = '';
     this.calcingMD5 = this.calcMD5();

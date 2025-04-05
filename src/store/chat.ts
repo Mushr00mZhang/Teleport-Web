@@ -188,11 +188,13 @@ export const useChatStore = defineStore('ws', () => {
           files.set(id, bufs);
         }
         bufs[index] = buf;
-        if (bufs.filter((i) => !!i).length !== count) return;
         const fileMsg = messages.find((i) => i.Type === 'file' && i.Content.Id === id) as
           | FileMsg
           | undefined;
         if (!fileMsg) return;
+        const received = bufs.filter((i) => !!i).length;
+        fileMsg.Progress = received / count;
+        if (received !== count) return;
         const file = new File(bufs, fileMsg.Content.Name, {
           type: fileMsg.Content.Type,
         });
@@ -255,6 +257,7 @@ export const useChatStore = defineStore('ws', () => {
           case 'rename':
             break;
           case 'file':
+            msg.Progress = 0;
             messages.push(msg);
             files.set(msg.Content.Id, []);
             break;

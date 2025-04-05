@@ -178,6 +178,7 @@ const selectFile = async () => {
       chatStore.sendFile(myFile, _to);
       const fileMsg = messages.value.find((i) => i.Type === 'file' && i.Content.Id === myFile.id);
       if (!fileMsg || fileMsg.Type !== 'file') continue;
+      fileMsg.Content.Url = URL.createObjectURL(file);
       let cnt = 0;
       await myFile.split((chunk: ChunkedBuffer) => {
         cnt++;

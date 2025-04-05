@@ -52,6 +52,7 @@ type FileMsg = {
     Name: string;
     Type: string;
     Ext: string;
+    Url?: string;
   };
   Read: boolean;
   Progress: number;
@@ -138,7 +139,7 @@ export const useChatStore = defineStore('ws', () => {
   };
   const sendFileChunk = (chunk: ChunkedBuffer, to: string) => {
     if (!ws.value) return false;
-    const prefix = `file-chunk${chunk.id}${chunk.index.toString().padStart(8)}${chunk.count
+    const prefix = `file-chunk${chunk.fileId}${chunk.index.toString().padStart(8)}${chunk.count
       .toString()
       .padStart(8)}${chunk.md5}${to.padStart(34)}`;
     const msgBuf = new Int8Array([
@@ -195,13 +196,10 @@ export const useChatStore = defineStore('ws', () => {
         const file = new File(bufs, fileMsg.Content.Name, {
           type: fileMsg.Content.Type,
         });
-        console.log(file);
+        // console.log(file);
         const url = URL.createObjectURL(file);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = file.name;
-        a.type = file.type;
-        a.click();
+        fileMsg.Content.Url = url;
+        // console.log(url);
       } else if (typeof e.data === 'string') {
         const msg: Message = JSON.parse(e.data);
         msg.Time = new Date(msg.Time);

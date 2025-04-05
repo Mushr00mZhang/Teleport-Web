@@ -72,7 +72,19 @@
                     check_circle
                   </md-icon>
                 </div>
-                <span class="teleport-chat-message-content">{{ msg.Content.Name }}</span>
+                <a
+                  class="teleport-chat-message-content teleport-chat-message-content-file"
+                  :href="msg.Content.Url"
+                  :download="msg.Content.Name"
+                >
+                  <img
+                    v-if="msg.Content.Type?.includes('image')"
+                    class="teleport-chat-message-content teleport-chat-message-content-file-image"
+                    :src="msg.Content.Url"
+                    :title="msg.Content.Name"
+                  />
+                  <span v-else>{{ msg.Content.Name }}</span>
+                </a>
               </div>
             </template>
           </div>
@@ -162,6 +174,7 @@ const selectFile = async () => {
     // console.log(input.files);
     for (const file of input.files) {
       const myFile = new MyFile(file);
+      // console.log(myFile.name, myFile.id, myFile.isImage);
       chatStore.sendFile(myFile, _to);
       const fileMsg = messages.value.find((i) => i.Type === 'file' && i.Content.Id === myFile.id);
       if (!fileMsg || fileMsg.Type !== 'file') continue;
@@ -303,6 +316,9 @@ $block-spacing: 8px;
     }
     &-self {
       align-items: flex-end;
+      .#{$prefix-class}-message-file {
+        justify-content: flex-end;
+      }
     }
     &-time {
       color: #aaa;
@@ -314,6 +330,11 @@ $block-spacing: 8px;
       padding: $block-spacing $block-spacing + 4px;
       border-radius: $block-spacing;
       background: #fff;
+      &-file {
+        &-image {
+          width: max(100px, 10vw);
+        }
+      }
     }
     &-file {
       display: flex;

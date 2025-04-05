@@ -19,6 +19,12 @@ export class MyFile {
     this.calcingMD5 = this.calcMD5();
     // this.insertFile();
   }
+  get name() {
+    return this.file?.name;
+  }
+  get isImage() {
+    return this.file?.type.startsWith('image');
+  }
   async getMD5() {
     await this.calcingMD5;
     return this.md5;

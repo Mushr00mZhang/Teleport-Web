@@ -235,14 +235,17 @@ $block-spacing: 8px;
     flex-direction: column;
     background: #fafafa;
     padding: $block-spacing;
+    overflow: hidden;
   }
   &-users {
     flex: auto;
     display: flex;
     flex-direction: column;
     overflow: hidden auto;
+    gap: $block-spacing;
   }
   &-user {
+    flex: none;
     display: grid;
     grid-template-columns: 32px auto;
     grid-column-gap: $block-spacing;
@@ -253,9 +256,6 @@ $block-spacing: 8px;
     }
     &-selected {
       background-color: #ddd;
-    }
-    &:not(:first-child) {
-      margin-top: $block-spacing;
     }
     &-avatar {
       width: 32px;
@@ -304,16 +304,15 @@ $block-spacing: 8px;
     flex-direction: column;
     padding: $block-spacing;
     overflow: hidden auto;
+    gap: $block-spacing;
   }
   &-message {
+    flex: none;
     display: flex;
     flex-direction: column;
     line-break: anywhere;
     white-space: pre-wrap;
     align-items: flex-start;
-    &:not(:first-child) {
-      margin-top: $block-spacing;
-    }
     &-self {
       align-items: flex-end;
       .#{$prefix-class}-message-file {

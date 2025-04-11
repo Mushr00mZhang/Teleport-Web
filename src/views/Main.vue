@@ -333,7 +333,8 @@ $block-spacing: 8px;
       &-file {
         display: block;
         &-image {
-          height: max(240px, 40vh);
+          max-width: 40vw;
+          max-height: 25vh;
           display: block;
         }
       }

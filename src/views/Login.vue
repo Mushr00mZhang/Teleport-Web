@@ -2,7 +2,7 @@
   <section class="teleport-login">
     <header class="teleport-login-header"></header>
     <main class="teleport-login-main">
-      <form @submit.prevent="login">
+      <form class="teleport-login-form" @submit.prevent="login">
         <md-outlined-text-field
           label="登录名"
           v-model="client.loginName"
@@ -78,9 +78,24 @@ $prefix-class: 'teleport-login';
   &-main {
     flex: 1;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
   &-footer {
     flex: none;
+  }
+  &-form {
+    width: min(400px, 80%);
+    // height: min(300px, 50%);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 2rem;
+    margin: auto;
+    box-shadow: 0 0 2rem #0003;
+    border-radius: 1rem;
   }
 }
 </style>

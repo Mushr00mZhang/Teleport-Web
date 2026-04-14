@@ -179,8 +179,8 @@ export const useChatStore = defineStore('ws', () => {
         console.log(
           `文件分片接收成功 id: ${id} [${String(index + 1).padStart(
             String(count).length,
-            '0'
-          )}/${count}] md5: ${md5} len: ${buf.byteLength}`
+            '0',
+          )}/${count}] md5: ${md5} len: ${buf.byteLength}`,
         );
         let bufs = files.get(id);
         if (!bufs) {
@@ -219,7 +219,7 @@ export const useChatStore = defineStore('ws', () => {
                     .find(
                       (i) =>
                         (i.Type === 'text' || i.Type === 'file') &&
-                        (i.From === msg.From || i.To === msg.From)
+                        (i.From === msg.From || i.To === msg.From),
                     ) as TextMsg | FileMsg,
                 };
                 users.push(user);
@@ -241,7 +241,7 @@ export const useChatStore = defineStore('ws', () => {
                     .find(
                       (i) =>
                         (i.Type === 'text' || i.Type === 'file') &&
-                        (i.From === msg.From || i.To === msg.From)
+                        (i.From === msg.From || i.To === msg.From),
                     ) as TextMsg | FileMsg,
                 };
                 users.push(user);
@@ -269,7 +269,7 @@ export const useChatStore = defineStore('ws', () => {
                 files.set(msg.Content.id, bufs);
               }
               if (!bufs) break;
-              bufs[msg.Content.index] = new Int8Array(msg.Content.buf);
+              bufs[msg.Content.index] = msg.Content.buf;
               if (bufs.filter((i) => !!i).length === msg.Content.count) {
                 console.log('文件接收完毕');
               }

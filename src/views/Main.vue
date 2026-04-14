@@ -56,20 +56,18 @@
               <div class="teleport-chat-message-file">
                 <div class="teleport-chat-message-prefix">
                   <md-circular-progress
-                    :class="[
-                      'teleport-chat-message-progress',
-                      { 'teleport-chat-message-progress-hidden': msg.Progress >= 1 },
-                    ]"
+                    class="teleport-chat-message-progress"
                     :id="`${msg.Content.Id}-progress`"
                     :value="msg.Progress"
-                  />
+                  >
+                  </md-circular-progress>
                   <md-icon
                     :class="[
                       'teleport-chat-message-progress-completed',
                       { 'teleport-chat-message-progress-completed-hidden': msg.Progress < 1 },
                     ]"
                   >
-                    check_circle
+                    check
                   </md-icon>
                 </div>
                 <a
@@ -124,7 +122,6 @@ import '@material/web/progress/circular-progress';
 import { computed, ref } from 'vue';
 import { MyFile } from '@/models/file';
 import type { ChunkedBuffer } from '@/workers/filesplit';
-import type { MdCircularProgress } from '@material/web/progress/circular-progress';
 const router = useRouter();
 const chatStore = useChatStore();
 const users = computed(() => {
@@ -147,7 +144,7 @@ const messages = computed(() => {
     .filter(
       (i) =>
         (to.value === chatStore.user.LoginName && i.From === to.value && i.To === to.value) ||
-        (to.value !== chatStore.user.LoginName && (i.From === to.value || i.To === to.value))
+        (to.value !== chatStore.user.LoginName && (i.From === to.value || i.To === to.value)),
     );
 });
 const msg = ref('');
@@ -191,9 +188,9 @@ const selectFile = async () => {
 };
 const formatTime = (time: Date) => {
   return `${time.getFullYear()}-${time.getMonth() + 1}-${time.getDate()} ${String(
-    time.getHours()
+    time.getHours(),
   ).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}:${String(
-    time.getSeconds()
+    time.getSeconds(),
   ).padStart(2, '0')}`;
 };
 // const onMessage = (e: MessageEvent) => {
@@ -317,6 +314,7 @@ $block-spacing: 8px;
     &-self {
       align-items: flex-end;
       .#{$prefix-class}-message-file {
+        flex-direction: row;
         justify-content: flex-end;
       }
     }
@@ -341,26 +339,20 @@ $block-spacing: 8px;
     }
     &-file {
       display: flex;
+      gap: 4px;
+      flex-direction: row-reverse;
     }
     &-prefix {
       position: relative;
     }
     &-progress {
       --md-circular-progress-size: 28px;
+      --md-circular-progress-active-indicator-color: green;
       margin-top: 6px;
-      margin-right: 2px;
-      opacity: 1;
-      transition: opacity 0.5s linear;
-      position: absolute;
-      top: 0;
-      right: 0;
-      &-hidden {
-        opacity: 0;
-      }
       &-completed {
-        --md-icon-size: 24px;
-        margin-top: 8px;
-        margin-right: 4px;
+        --md-icon-size: 16px;
+        margin-top: 12px;
+        margin-right: 6px;
         color: green;
         opacity: 1;
         transition: opacity 0.5s linear;
@@ -379,8 +371,6 @@ $block-spacing: 8px;
     position: relative;
     &-tools {
       display: flex;
-    }
-    &-tool {
     }
     &-message {
       width: 100%;

@@ -8,8 +8,8 @@
           v-model="client.loginName"
           :error="loginNameCheck.error"
           :error-text="loginNameCheck.text"
-        ></md-outlined-text-field>
-        <md-outlined-text-field label="昵称" v-model="client.nickName"></md-outlined-text-field>
+        />
+        <md-outlined-text-field label="昵称" v-model="client.nickName" />
         <md-filled-button type="submit">登录</md-filled-button>
       </form>
     </main>

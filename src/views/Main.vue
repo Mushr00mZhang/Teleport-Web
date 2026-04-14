@@ -102,6 +102,7 @@
           type="textarea"
           label="请输入"
           v-model="msg"
+          @keyup.enter="enter"
         ></md-outlined-text-field>
         <md-filled-icon-button class="teleport-chat-input-send-message" @click="send">
           <md-icon>send</md-icon>
@@ -155,6 +156,10 @@ const selectUser = (user: User) => {
     msg.Read = true;
   }
 };
+const enter = (e: KeyboardEvent) => {
+  if (!e.ctrlKey) return;
+  send();
+};
 const send = () => {
   if (!msg.value || !to.value) return;
   chatStore.sendMsg(msg.value, to.value);
@@ -167,25 +172,48 @@ const selectFile = async () => {
   input.type = 'file';
   input.click();
   await new Promise((r) => input.addEventListener('change', r));
-  if (input.files && input.files.length) {
-    // console.log(input.files);
-    for (const file of input.files) {
+  await uploadFile(input.files, _to);
+  input.remove();
+};
+const uploadFile = async (files: FileList | File[] | null, to: string) => {
+  if (files && files.length) {
+    // console.log(files);
+    for (const file of files) {
       const myFile = new MyFile(file);
       // console.log(myFile.name, myFile.id, myFile.isImage);
-      chatStore.sendFile(myFile, _to);
+      chatStore.sendFile(myFile, to);
       const fileMsg = messages.value.find((i) => i.Type === 'file' && i.Content.Id === myFile.id);
       if (!fileMsg || fileMsg.Type !== 'file') continue;
       fileMsg.Content.Url = URL.createObjectURL(file);
       let cnt = 0;
       await myFile.split((chunk: ChunkedBuffer) => {
         cnt++;
-        chatStore.sendFileChunk(chunk, _to);
+        chatStore.sendFileChunk(chunk, to);
         fileMsg.Progress = cnt / myFile.count;
       });
     }
   }
-  input.remove();
 };
+const paste = async (e: ClipboardEvent) => {
+  if (!to.value) return;
+  const _to = to.value;
+  const items = e.clipboardData?.items;
+  if (!items?.length) return;
+  console.log(items);
+  let confirmed = false;
+  const files: File[] = [];
+  for (const item of items) {
+    console.log(item.kind, item.type);
+    if (item.kind !== 'file') continue;
+    confirmed = confirmed || confirm('确认发送？');
+    if (!confirmed) return;
+    const file = item.getAsFile();
+    if (!file) continue;
+    files.push(file);
+  }
+  await uploadFile(files, _to);
+};
+document.addEventListener('paste', paste);
 const formatTime = (time: Date) => {
   return `${time.getFullYear()}-${time.getMonth() + 1}-${time.getDate()} ${String(
     time.getHours(),
